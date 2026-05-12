@@ -6,7 +6,7 @@ const { OAuth2Client } = require('google-auth-library');
 const cloudinary = require('cloudinary').v2;
 
 // --- FIX: Direct Client ID (Taaki 500 Error na aaye) ---
-const GOOGLE_ID = "36124091072-nlmktopsn9rl2tg4471l9c3kapr98bbk.apps.googleusercontent.com";
+const GOOGLE_ID = "36124091072-k7t809qm7ttdvjf0c306qmblbvlqo622.apps.googleusercontent.com";
 const googleClient = new OAuth2Client(GOOGLE_ID);
 const JWT_SECRET = process.env.JWT_SECRET || 'merapyarsabsepyara123';
 
