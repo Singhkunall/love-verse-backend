@@ -52,6 +52,7 @@ exports.googleLogin = async (req, res) => {
 exports.connectPartner = async (req, res) => {
   const { userId, partnerEmail } = req.body;
   try {
+    const { io } = require('../server');
     const partner = await User.findOne({ email: partnerEmail });
     const me = await User.findById(userId);
 
@@ -60,6 +61,10 @@ exports.connectPartner = async (req, res) => {
 
     await User.findByIdAndUpdate(userId, { partnerId: partner._id, partnerEmail: partner.email });
     await User.findByIdAndUpdate(partner._id, { partnerId: userId, partnerEmail: me.email });
+
+    // Real-time notify dono ko
+    io.to(userId).emit("partner_connected");
+    io.to(partner._id.toString()).emit("partner_connected");
 
     res.status(200).json({ message: "Boom! Verse Linked! ❤️" });
   } catch (error) { 
