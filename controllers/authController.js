@@ -16,27 +16,19 @@ const generateToken = (id) => {
 
 // --- 1. GOOGLE LOGIN (Scratch se naya login logic) ---
 exports.googleLogin = async (req, res) => {
-  const { token } = req.body;
+  const { name, email, picture } = req.body;
   try {
-    if (!token) return res.status(400).json({ message: "Token missing!" });
-
-    const ticket = await googleClient.verifyIdToken({
-      idToken: token,
-      audience: GOOGLE_ID,
-    });
-    const payload = ticket.getPayload();
-    const { name, email, picture } = payload;
+    if (!email) return res.status(400).json({ message: "Email missing!" });
 
     let user = await User.findOne({ email });
     if (!user) {
-      // Naya user register ho jayega agar database mein nahi hai
       user = await User.create({
         name,
         email,
         avatar: picture,
-        role: "partner1" 
+        role: "partner1"
       });
-      console.log("🆕 Naya User Google se ban gaya:", email);
+      console.log("🆕 Naya User ban gaya:", email);
     }
 
     res.status(200).json({
@@ -51,8 +43,8 @@ exports.googleLogin = async (req, res) => {
       token: generateToken(user._id),
     });
   } catch (error) {
-    console.error("❌ Google Auth Error:", error.message);
-    res.status(500).json({ message: "Verification failed: " + error.message });
+    console.error("❌ Error:", error.message);
+    res.status(500).json({ message: error.message });
   }
 };
 
