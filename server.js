@@ -189,6 +189,12 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     console.log('User Disconnected', socket.id);
   });
+
+  socket.on("mood_updated", (data) => {
+  socket.to(data.roomId).emit("partner_mood_updated");
+  });
+
+
 });
 
 const PORT = process.env.PORT || 8000;
