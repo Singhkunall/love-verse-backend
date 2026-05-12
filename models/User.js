@@ -19,14 +19,15 @@ const userSchema = new mongoose.Schema({
 
 userSchema.pre('save', async function(next) {
   if (!this.password || !this.isModified('password')) {
-    return next();
+    next();
+    return;
   }
   try {
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
-    return next();
+    next();
   } catch (err) {
-    return next(err);
+    next(err);
   }
 });
 
