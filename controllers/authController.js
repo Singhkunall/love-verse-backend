@@ -24,7 +24,8 @@ exports.googleLogin = async (req, res) => {
       idToken: token,
       audience: GOOGLE_ID,
     });
-    const { name, email, picture } = ticket.getPayload();
+    const payload = ticket.getPayload();
+    const { name, email, picture } = payload;
 
     let user = await User.findOne({ email });
     if (!user) {
