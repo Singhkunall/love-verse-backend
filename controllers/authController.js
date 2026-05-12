@@ -5,21 +5,24 @@ const jwt = require('jsonwebtoken');
 const { OAuth2Client } = require('google-auth-library');
 const cloudinary = require('cloudinary').v2;
 
-// Google Client ID setup - Render Environment Variables se uthayega
-const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+// --- FIX: Direct Client ID (Taaki 500 Error na aaye) ---
+const GOOGLE_ID = "36124091072-nlmktopsn9rl2tg4471l9c3kapr98bbk.apps.googleusercontent.com";
+const googleClient = new OAuth2Client(GOOGLE_ID);
 const JWT_SECRET = process.env.JWT_SECRET || 'merapyarsabsepyara123';
 
 const generateToken = (id) => {
   return jwt.sign({ id }, JWT_SECRET, { expiresIn: '30d' });
 };
 
-// --- 1. GOOGLE LOGIN (Now the Primary Auth Method) ---
+// --- 1. GOOGLE LOGIN (Scratch se naya login logic) ---
 exports.googleLogin = async (req, res) => {
   const { token } = req.body;
   try {
+    if (!token) return res.status(400).json({ message: "Token missing!" });
+
     const ticket = await googleClient.verifyIdToken({
       idToken: token,
-      audience: process.env.GOOGLE_CLIENT_ID,
+      audience: GOOGLE_ID,
     });
     const { name, email, picture } = ticket.getPayload();
 
@@ -47,12 +50,12 @@ exports.googleLogin = async (req, res) => {
       token: generateToken(user._id),
     });
   } catch (error) {
-    console.error("❌ Google Auth Error:", error);
-    res.status(500).json({ message: "Google Login fail ho gaya!" });
+    console.error("❌ Google Auth Error:", error.message);
+    res.status(500).json({ message: "Verification failed: " + error.message });
   }
 };
 
-// --- 2. CONNECT PARTNER ---
+// --- 2. CONNECT PARTNER (NO CHANGE) ---
 exports.connectPartner = async (req, res) => {
   const { userId, partnerEmail } = req.body;
   try {
@@ -71,7 +74,7 @@ exports.connectPartner = async (req, res) => {
   }
 };
 
-// --- 3. UPDATE ANNIVERSARY ---
+// --- 3. UPDATE ANNIVERSARY (NO CHANGE) ---
 exports.updateAnniversary = async (req, res) => {
   const { userId, date } = req.body;
   try {
@@ -85,7 +88,7 @@ exports.updateAnniversary = async (req, res) => {
   }
 };
 
-// --- 4. UPDATE MOOD ---
+// --- 4. UPDATE MOOD (NO CHANGE) ---
 exports.updateMood = async (req, res) => {
   const { userId, mood } = req.body;
   try {
@@ -96,7 +99,7 @@ exports.updateMood = async (req, res) => {
   }
 };
 
-// --- 5. GET PROFILE ---
+// --- 5. GET PROFILE (NO CHANGE) ---
 exports.getUserProfile = async (req, res) => {
   try {
     const user = await User.findById(req.params.id).populate('partnerId', 'name email mood avatar');
@@ -107,7 +110,7 @@ exports.getUserProfile = async (req, res) => {
   }
 };
 
-// --- 6. ADD MEMORY (Cloudinary Integration) ---
+// --- 6. ADD MEMORY (NO CHANGE) ---
 exports.addMemory = async (req, res) => {
   const { userId, partnerId, image, caption } = req.body;
   try {
@@ -126,7 +129,7 @@ exports.addMemory = async (req, res) => {
   }
 };
 
-// --- 7. GET MEMORIES ---
+// --- 7. GET MEMORIES (NO CHANGE) ---
 exports.getMemories = async (req, res) => {
   const { userId, partnerId } = req.query;
   try {
@@ -139,7 +142,7 @@ exports.getMemories = async (req, res) => {
   }
 };
 
-// --- 8. DELETE MEMORY ---
+// --- 8. DELETE MEMORY (NO CHANGE) ---
 exports.deleteMemory = async (req, res) => {
   try {
     await Memory.findByIdAndDelete(req.params.id);
@@ -149,7 +152,7 @@ exports.deleteMemory = async (req, res) => {
   }
 };
 
-// --- 9. GET CHAT HISTORY ---
+// --- 9. GET CHAT HISTORY (NO CHANGE) ---
 exports.getChatHistory = async (req, res) => {
   try {
     const messages = await Message.find({ room: req.params.roomId }).sort({ createdAt: 1 });

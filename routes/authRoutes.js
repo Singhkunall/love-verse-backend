@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Nudge = require('../models/Nudge');
 
-// Purane sendOTP, register, loginUser hata diye hain kyunki ab sirf Google use hoga
+// Sirf wahi functions import kiye hain jo Google Auth aur Features ke liye chahiye
 const { 
   googleLogin, 
   connectPartner, 
@@ -15,25 +15,25 @@ const {
   getChatHistory 
 } = require('../controllers/authController');
 
-// --- Auth Routes ---
-// Ab sirf ek hi main login route hai
+// --- 1. Pure Google Auth Route ---
+// Ab na OTP ka route hai, na manual register ka. Bas ye ek hi kaafi hai.
 router.post('/google-login', googleLogin);
 
-// --- Profile & Connection ---
+// --- 2. Profile & Connection ---
 router.post('/connect', connectPartner);
 router.post('/update-anniversary', updateAnniversary);
 router.post('/update-mood', updateMood);
 router.get('/profile/:id', getUserProfile);
 
-// --- Memories Routes ---
+// --- 3. Memories Routes ---
 router.post('/add-memory', addMemory);
 router.get('/get-memories', getMemories);
 router.delete('/delete-memory/:id', deleteMemory);
 
-// --- Chat History ---
+// --- 4. Chat History ---
 router.get('/chat/history/:roomId', getChatHistory); 
 
-// --- Nudge (Hugs/Pokes) System ---
+// --- 5. Nudge (Hugs/Pokes) System ---
 router.post('/send-nudge', async (req, res) => {
   try {
     const { senderId, receiverId, roomId } = req.body;
