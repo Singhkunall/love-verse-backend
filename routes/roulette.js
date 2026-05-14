@@ -39,5 +39,34 @@ router.post('/spin', async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
+// Complete the task
+router.post('/complete', async (req, res) => {
+  try {
+    const { roomId, userId } = req.body;
+    
+    const roulette = await Roulette.findOneAndUpdate(
+      { roomId },
+      { 
+        isCompleted: true, 
+        completedBy: userId,
+        completedAt: new Date(),
+        xpEarned: 50
+      },
+      { new: true }
+    ).populate('spunBy', 'name').populate('completedBy', 'name');
+
+    // Notify partner real-time
+    const { io } = require('../server');
+    io.to(roomId).emit("task_completed", { 
+      task: roulette.lastTask,
+      completedBy: roulette.completedBy?.name,
+      xp: 50
+    });
+
+    res.json(roulette);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
 
 module.exports = router;

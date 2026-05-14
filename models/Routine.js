@@ -4,7 +4,11 @@ const rouletteSchema = new mongoose.Schema({
   roomId: { type: String, required: true, unique: true },
   lastTask: { type: String },
   spunBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  spunAt: { type: Date, default: Date.now }
+  spunAt: { type: Date, default: Date.now },
+  isCompleted: { type: Boolean, default: false },
+  completedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+  completedAt: { type: Date, default: null },
+  xpEarned: { type: Number, default: 0 }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Roulette', rouletteSchema);
