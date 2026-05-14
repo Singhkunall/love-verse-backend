@@ -29,10 +29,10 @@ router.post('/spin', async (req, res) => {
     const { roomId, userId, task } = req.body;
 
     const roulette = await Roulette.findOneAndUpdate(
-      { roomId },
-      { lastTask: task, spunBy: userId, spunAt: new Date() },
-      { upsert: true, new: true }
-    ).populate('spunBy', 'name');
+  { roomId },
+  { lastTask: task, spunBy: userId, spunAt: new Date() },
+  { upsert: true, returnDocument: 'after' }
+).populate('spunBy', 'name');
 
     res.json(roulette);
   } catch (err) {
@@ -52,10 +52,9 @@ router.post('/complete', async (req, res) => {
         completedAt: new Date(),
         xpEarned: 50
       },
-      { new: true }
+      { returnDocument: 'after' }
     ).populate('spunBy', 'name').populate('completedBy', 'name');
 
-    // Notify partner real-time
     const { io } = require('../server');
     io.to(roomId).emit("task_completed", { 
       task: roulette.lastTask,
@@ -65,6 +64,7 @@ router.post('/complete', async (req, res) => {
 
     res.json(roulette);
   } catch (err) {
+    console.error("Complete error:", err.message);
     res.status(500).json({ message: err.message });
   }
 });
