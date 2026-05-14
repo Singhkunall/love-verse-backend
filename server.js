@@ -44,9 +44,8 @@ const wishlistRoutes = require('./routes/wishlistRoutes');
 app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/auth', authRoutes);
 
-const routineRoutes = require('./routes/routineRoutes');
-app.use('/api/routine', routineRoutes);
-app.use('/api/events', eventRoutes);
+const rouletteRoute = require('./routes/roulette');
+app.use('/api/roulette', rouletteRoute);
 
 app.get('/api/chat/history/:roomId', async (req, res) => {
   try {

@@ -1,11 +1,10 @@
 const mongoose = require('mongoose');
 
-const routineSchema = new mongoose.Schema({
-  roomId: { type: String, required: true }, // [userId, partnerId] join string
-  text: { type: String, required: true },
-  completed: { type: Boolean, default: false },
-  addedBy: { type: String },
-  createdAt: { type: Date, default: Date.now }
-});
+const rouletteSchema = new mongoose.Schema({
+  roomId: { type: String, required: true, unique: true },
+  lastTask: { type: String },
+  spunBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  spunAt: { type: Date, default: Date.now }
+}, { timestamps: true });
 
-module.exports = mongoose.model('Routine', routineSchema);
+module.exports = mongoose.model('Roulette', rouletteSchema);

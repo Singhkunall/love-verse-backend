@@ -1,22 +1,43 @@
-const router = require('express').Router();
+const express = require('express');
+const router = express.Router();
 const Roulette = require('../models/Roulette');
 
 // Get today's task
 router.get('/:roomId', async (req, res) => {
-  const today = new Date().setHours(0,0,0,0);
-  const task = await Roulette.findOne({ 
-    roomId: req.params.roomId, 
-    createdAt: { $gte: today } 
-  }).populate('spunBy', 'name');
-  res.json(task);
+  try {
+    const roulette = await Roulette.findOne({ roomId: req.params.roomId })
+      .populate('spunBy', 'name');
+    
+    if (!roulette) return res.json(null);
+
+    // Check if spun today
+    const today = new Date();
+    const spunAt = new Date(roulette.spunAt);
+    const isSameDay = today.toDateString() === spunAt.toDateString();
+
+    if (!isSameDay) return res.json(null);
+    
+    res.json(roulette);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 });
 
-// Save new spin
+// Spin the wheel
 router.post('/spin', async (req, res) => {
-  const { roomId, task, userId } = req.body;
-  const newSpin = new Roulette({ roomId, lastTask: task, spunBy: userId });
-  await newSpin.save();
-  res.json(newSpin);
+  try {
+    const { roomId, userId, task } = req.body;
+
+    const roulette = await Roulette.findOneAndUpdate(
+      { roomId },
+      { lastTask: task, spunBy: userId, spunAt: new Date() },
+      { upsert: true, new: true }
+    ).populate('spunBy', 'name');
+
+    res.json(roulette);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 });
 
 module.exports = router;
