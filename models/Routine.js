@@ -8,7 +8,8 @@ const rouletteSchema = new mongoose.Schema({
   isCompleted: { type: Boolean, default: false },
   completedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
   completedAt: { type: Date, default: null },
-  xpEarned: { type: Number, default: 0 }
+  xpEarned: { type: Number, default: 0 },
+  proofImage: { type: String, default: null } 
 }, { timestamps: true });
 
 module.exports = mongoose.model('Roulette', rouletteSchema);

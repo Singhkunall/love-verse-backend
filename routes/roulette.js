@@ -42,15 +42,25 @@ router.post('/spin', async (req, res) => {
 // Complete the task
 router.post('/complete', async (req, res) => {
   try {
-    const { roomId, userId } = req.body;
-    
+    const { roomId, userId, proofImage } = req.body;
+
+    let proofUrl = null;
+    if (proofImage) {
+      const cloudinary = require('cloudinary').v2;
+      const upload = await cloudinary.uploader.upload(proofImage, { 
+        folder: 'roulette_proofs' 
+      });
+      proofUrl = upload.secure_url;
+    }
+
     const roulette = await Roulette.findOneAndUpdate(
       { roomId },
       { 
         isCompleted: true, 
         completedBy: userId,
         completedAt: new Date(),
-        xpEarned: 50
+        xpEarned: 50,
+        proofImage: proofUrl
       },
       { returnDocument: 'after' }
     ).populate('spunBy', 'name').populate({ path: 'completedBy', select: 'name', strictPopulate: false });
@@ -59,7 +69,8 @@ router.post('/complete', async (req, res) => {
     io.to(roomId).emit("task_completed", { 
       task: roulette.lastTask,
       completedBy: roulette.completedBy?.name,
-      xp: 50
+      xp: 50,
+      proofImage: proofUrl
     });
 
     res.json(roulette);
