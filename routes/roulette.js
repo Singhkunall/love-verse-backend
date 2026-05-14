@@ -53,7 +53,7 @@ router.post('/complete', async (req, res) => {
         xpEarned: 50
       },
       { returnDocument: 'after' }
-    ).populate('spunBy', 'name').populate('completedBy', 'name');
+    ).populate('spunBy', 'name').populate({ path: 'completedBy', select: 'name', strictPopulate: false });
 
     const { io } = require('../server');
     io.to(roomId).emit("task_completed", { 
