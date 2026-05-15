@@ -4,6 +4,11 @@ const Message = require('../models/Message');
 const jwt = require('jsonwebtoken');
 const { OAuth2Client } = require('google-auth-library');
 const cloudinary = require('cloudinary').v2;
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 // --- FIX: Direct Client ID (Taaki 500 Error na aaye) ---
 const GOOGLE_ID = "36124091072-k7t809qm7ttdvjf0c306qmblbvlqo622.apps.googleusercontent.com";
