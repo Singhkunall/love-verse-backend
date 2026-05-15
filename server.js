@@ -47,6 +47,7 @@ app.use('/api/auth', authRoutes);
 const rouletteRoute = require('./routes/roulette');
 app.use('/api/roulette', rouletteRoute);
 
+app.use('/api/events', eventRoutes);
 app.get('/api/chat/history/:roomId', async (req, res) => {
   try {
     const messages = await Message.find({ room: req.params.roomId }).sort({ createdAt: 1 });
@@ -191,6 +192,7 @@ io.on('connection', (socket) => {
 
   socket.on("mood_updated", (data) => {
   socket.to(data.roomId).emit("partner_mood_updated");
+  socket.to(data.partnerId).emit("partner_mood_updated");
   });
 
 
