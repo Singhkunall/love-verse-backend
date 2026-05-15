@@ -119,6 +119,12 @@ exports.addMemory = async (req, res) => {
   try {
     if (!image) return res.status(400).json({ message: "Photo missing!" });
     
+    console.log("Cloudinary config:", {
+      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+      api_key: process.env.CLOUDINARY_API_KEY ? "exists" : "MISSING",
+      api_secret: process.env.CLOUDINARY_API_SECRET ? "exists" : "MISSING",
+    });
+
     const uploadRes = await cloudinary.uploader.upload(image, { folder: 'love_verse_memories' });
     const memory = await Memory.create({ 
       userId, 
@@ -128,6 +134,7 @@ exports.addMemory = async (req, res) => {
     });
     res.status(201).json(memory);
   } catch (error) { 
+    console.error("❌ Memory upload error:", error.message);
     res.status(500).json({ message: "Upload failed: " + error.message }); 
   }
 };
