@@ -194,6 +194,11 @@ io.on('connection', (socket) => {
   socket.to(data.roomId).emit("partner_mood_updated");
   socket.to(data.partnerId).emit("partner_mood_updated");
   });
+  
+  socket.on("anniversary_updated", (data) => {
+  socket.to(data.roomId).emit("partner_mood_updated");
+  socket.to(data.partnerId).emit("partner_mood_updated");
+});
 
 
 });
