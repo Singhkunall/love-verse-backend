@@ -2,9 +2,9 @@ const express = require('express');
 const router = express.Router();
 const Nudge = require('../models/Nudge');
 
-// Sirf wahi functions import kiye hain jo Google Auth aur Features ke liye chahiye
 const { 
-  googleLogin, 
+  googleLogin,
+  googleCallback,
   connectPartner, 
   updateAnniversary, 
   updateMood, 
@@ -16,8 +16,8 @@ const {
 } = require('../controllers/authController');
 
 // --- 1. Pure Google Auth Route ---
-// Ab na OTP ka route hai, na manual register ka. Bas ye ek hi kaafi hai.
 router.post('/google-login', googleLogin);
+router.get('/google-callback', googleCallback);
 
 // --- 2. Profile & Connection ---
 router.post('/connect', connectPartner);
@@ -47,7 +47,6 @@ router.post('/send-nudge', async (req, res) => {
 router.get('/check-nudges/:userId', async (req, res) => {
   try {
     const nudges = await Nudge.find({ receiverId: req.params.userId, isRead: false });
-    // Dekhne ke baad mark as read kar do
     await Nudge.updateMany({ receiverId: req.params.userId }, { isRead: true });
     res.json(nudges);
   } catch (error) {

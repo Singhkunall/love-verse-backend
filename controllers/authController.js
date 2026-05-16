@@ -52,6 +52,35 @@ exports.googleLogin = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+exports.googleCallback = async (req, res) => {
+  const { code } = req.query;
+  try {
+    const { tokens } = await googleClient.getToken({
+      code,
+      redirect_uri: `${process.env.BACKEND_URL}/api/auth/google-callback`,
+    });
+    
+    const ticket = await googleClient.verifyIdToken({
+      idToken: tokens.id_token,
+      audience: GOOGLE_ID,
+    });
+    
+    const { name, email, picture } = ticket.getPayload();
+    
+    let user = await User.findOne({ email });
+    if (!user) {
+      user = await User.create({ name, email, avatar: picture });
+    }
+    
+    const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '30d' });
+    
+    // Frontend ko redirect karo token ke saath
+    res.redirect(`https://love-verse-frontend.vercel.app/auth-callback?token=${token}&user=${encodeURIComponent(JSON.stringify({ ...user._doc, token }))}`);
+  } catch (error) {
+    console.error("Google callback error:", error);
+    res.redirect(`https://love-verse-frontend.vercel.app/login?error=auth_failed`);
+  }
+};
 
 // --- 2. CONNECT PARTNER (NO CHANGE) ---
 exports.connectPartner = async (req, res) => {
