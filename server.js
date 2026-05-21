@@ -199,6 +199,23 @@ io.on('connection', (socket) => {
   socket.to(data.roomId).emit("partner_mood_updated");
   socket.to(data.partnerId).emit("partner_mood_updated");
 });
+socket.on("register_peer", (data) => {
+  // Store peer ID for this user
+  socket.peerId = data.peerId;
+  socket.userId = data.userId;
+});
+
+socket.on("get_peer_id", (data) => {
+  // Find partner's socket and get their peer ID
+  const partnerSocket = [...io.sockets.sockets.values()]
+    .find(s => s.userId === data.partnerId);
+  
+  if (partnerSocket) {
+    socket.emit("partner_peer_id", { peerId: partnerSocket.peerId });
+  } else {
+    socket.emit("partner_peer_id", { peerId: null });
+  }
+});
 
 
 });
