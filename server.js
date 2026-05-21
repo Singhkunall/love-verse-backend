@@ -47,6 +47,9 @@ app.use('/api/auth', authRoutes);
 const rouletteRoute = require('./routes/roulette');
 app.use('/api/roulette', rouletteRoute);
 
+const voiceNoteRoutes = require('./routes/voiceNoteRoutes');
+app.use('/api/voice-notes', voiceNoteRoutes);
+
 const routineRoutes = require('./routes/routineRoutes');
 app.use('/api/routine', routineRoutes);
 
@@ -125,6 +128,14 @@ io.on('connection', (socket) => {
   socket.on("send_reaction_score", (data) => {
     socket.to(data.roomId).emit("partner_reaction_score", data);
   });
+
+  socket.on("new_voice_note", (data) => {
+  socket.to(data.roomId).emit("receive_voice_note", data);
+});
+
+socket.on("voice_note_reaction", (data) => {
+  socket.to(data.roomId).emit("voice_reaction_update", data);
+});
 
   socket.on("initiate_memory_game", (data) => {
     io.to(data.roomId).emit("start_memory_game", {
