@@ -221,21 +221,18 @@ socket.on("get_peer_id", (data) => {
 });
 const { ExpressPeerServer } = require('peer');
 
-// Existing server listen ke BAAD ye add karo
-server.listen(PORT, () => {
-  console.log(`🚀 Server started on port ${PORT}`);
-});
-
-const peerServer = ExpressPeerServer(server, {
-  debug: true,
-  path: '/peerjs',
-  allow_discovery: true,
-});
-
-app.use('/peerjs', peerServer);
-
 const PORT = process.env.PORT || 8000;
+
 server.listen(PORT, () => {
   console.log(`🚀 Server started on port ${PORT}`);
+
+  const peerServer = ExpressPeerServer(server, {
+    debug: true,
+    path: '/peerjs',
+    allow_discovery: true,
+  });
+
+  app.use('/peerjs', peerServer);
 });
+
 module.exports = { io };
