@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Nudge = require('../models/Nudge');
+const User = require('../models/User');
 
 const { 
   googleLogin,
