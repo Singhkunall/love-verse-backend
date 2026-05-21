@@ -53,5 +53,20 @@ router.get('/check-nudges/:userId', async (req, res) => {
     res.status(500).json({ message: "Error checking nudges" });
   }
 });
+router.post('/update-avatar', async (req, res) => {
+  try {
+    const { userId, avatar } = req.body;
+    const cloudinary = require('cloudinary').v2;
+    const upload = await cloudinary.uploader.upload(avatar, { folder: 'avatars' });
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { avatar: upload.secure_url },
+      { new: true }
+    );
+    res.json({ success: true, avatar: upload.secure_url, user });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
 
 module.exports = router;
