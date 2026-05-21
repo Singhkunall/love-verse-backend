@@ -65,5 +65,21 @@ router.put('/react/:id', async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
+// Delete voice note
+router.delete('/:id', async (req, res) => {
+  try {
+    const note = await VoiceNote.findById(req.params.id);
+    if (!note) return res.status(404).json({ message: "Not found" });
 
+    // Cloudinary se bhi delete karo
+    const cloudinary = require('cloudinary').v2;
+    const publicId = note.audioUrl.split('/').slice(-2).join('/').split('.')[0];
+    await cloudinary.uploader.destroy(publicId, { resource_type: 'video' });
+
+    await VoiceNote.findByIdAndDelete(req.params.id);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
 module.exports = router;
