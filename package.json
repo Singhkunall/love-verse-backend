@@ -12,6 +12,7 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "agora-token": "^2.0.5",
     "axios": "^1.14.0",
     "bcryptjs": "^3.0.3",
     "cheerio": "^1.2.0",

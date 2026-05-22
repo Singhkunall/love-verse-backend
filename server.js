@@ -55,6 +55,9 @@ app.use("/api/voice-notes", voiceNoteRoutes);
 const routineRoutes = require("./routes/routineRoutes");
 app.use("/api/routine", routineRoutes);
 
+const agoraRoutes = require('./routes/agoraRoutes');
+app.use('/api/agora', agoraRoutes);
+
 app.use("/api/events", eventRoutes);
 app.get("/api/chat/history/:roomId", async (req, res) => {
   try {
