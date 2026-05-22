@@ -214,7 +214,7 @@ io.on("connection", (socket) => {
     console.log("User Disconnected", socket.id);
   });
   socket.on("avatar_updated", (data) => {
-    socket.to(data.roomId).emit("partner_avatar_updated");
+    socket.to(data.partnerId).emit("partner_avatar_updated");
   });
 
   socket.on("mood_updated", (data) => {
