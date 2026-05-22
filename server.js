@@ -1,13 +1,13 @@
-const express = require('express');
-const http = require('http');
-const { Server } = require('socket.io');
-const dotenv = require('dotenv');
-const cors = require('cors');
-const connectDB = require('./config/db');
-const authRoutes = require('./routes/authRoutes');
+const express = require("express");
+const http = require("http");
+const { Server } = require("socket.io");
+const dotenv = require("dotenv");
+const cors = require("cors");
+const connectDB = require("./config/db");
+const authRoutes = require("./routes/authRoutes");
 // --- FIX: '../' ko hata kar './' kiya kyunki server.js aur models same level par hain ---
-const Message = require('./models/Message'); 
-const eventRoutes = require('./routes/event.routes');
+const Message = require("./models/Message");
+const eventRoutes = require("./routes/event.routes");
 
 dotenv.config();
 connectDB();
@@ -15,19 +15,21 @@ connectDB();
 const app = express();
 
 const allowedOrigins = [
-  'http://localhost:5173', 
-  'https://love-verse-frontend.vercel.app',
-  /\.vercel\.app$/
+  "http://localhost:5173",
+  "https://love-verse-frontend.vercel.app",
+  /\.vercel\.app$/,
 ];
 
-app.use(cors({
-  origin: allowedOrigins,
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"]
-}));
+app.use(
+  cors({
+    origin: allowedOrigins,
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  }),
+);
 
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
 const server = http.createServer(app);
 
@@ -36,39 +38,41 @@ const io = new Server(server, {
   cors: {
     origin: allowedOrigins,
     methods: ["GET", "POST"],
-    credentials: true
-  }
+    credentials: true,
+  },
 });
 
-const wishlistRoutes = require('./routes/wishlistRoutes');
-app.use('/api/wishlist', wishlistRoutes);
-app.use('/api/auth', authRoutes);
+const wishlistRoutes = require("./routes/wishlistRoutes");
+app.use("/api/wishlist", wishlistRoutes);
+app.use("/api/auth", authRoutes);
 
-const rouletteRoute = require('./routes/roulette');
-app.use('/api/roulette', rouletteRoute);
+const rouletteRoute = require("./routes/roulette");
+app.use("/api/roulette", rouletteRoute);
 
-const voiceNoteRoutes = require('./routes/voiceNoteRoutes');
-app.use('/api/voice-notes', voiceNoteRoutes);
+const voiceNoteRoutes = require("./routes/voiceNoteRoutes");
+app.use("/api/voice-notes", voiceNoteRoutes);
 
-const routineRoutes = require('./routes/routineRoutes');
-app.use('/api/routine', routineRoutes);
+const routineRoutes = require("./routes/routineRoutes");
+app.use("/api/routine", routineRoutes);
 
-app.use('/api/events', eventRoutes);
-app.get('/api/chat/history/:roomId', async (req, res) => {
+app.use("/api/events", eventRoutes);
+app.get("/api/chat/history/:roomId", async (req, res) => {
   try {
-    const messages = await Message.find({ room: req.params.roomId }).sort({ createdAt: 1 });
+    const messages = await Message.find({ room: req.params.roomId }).sort({
+      createdAt: 1,
+    });
     res.json(messages);
   } catch (err) {
     res.status(500).json({ error: "Chat load nahi ho payi" });
   }
 });
 
-app.get('/', (req, res) => {
-  res.send('Love-Verse Server is Flying on Render! ❤️');
+app.get("/", (req, res) => {
+  res.send("Love-Verse Server is Flying on Render! ❤️");
 });
 
-io.on('connection', (socket) => {
-  console.log('A user connected:', socket.id);
+io.on("connection", (socket) => {
+  console.log("A user connected:", socket.id);
 
   socket.on("setup", (userId) => {
     socket.join(userId);
@@ -87,7 +91,7 @@ io.on('connection', (socket) => {
 
   socket.on("send_message", async (data) => {
     try {
-      if (typeof data.message === 'string' && data.message.startsWith("http")) {
+      if (typeof data.message === "string" && data.message.startsWith("http")) {
         data.isImage = true;
       }
       const newMessage = new Message(data);
@@ -105,7 +109,7 @@ io.on('connection', (socket) => {
   socket.on("new_wishlist_item", (data) => {
     socket.to(data.roomId).emit("wishlist_updated", {
       message: "Partner ne Wishlist mein kuch naya dala hai! 🎁",
-      item: data.item
+      item: data.item,
     });
   });
 
@@ -130,17 +134,17 @@ io.on('connection', (socket) => {
   });
 
   socket.on("new_voice_note", (data) => {
-  socket.to(data.roomId).emit("receive_voice_note", data);
-});
+    socket.to(data.roomId).emit("receive_voice_note", data);
+  });
 
-socket.on("voice_note_reaction", (data) => {
-  socket.to(data.roomId).emit("voice_reaction_update", data);
-});
+  socket.on("voice_note_reaction", (data) => {
+    socket.to(data.roomId).emit("voice_reaction_update", data);
+  });
 
   socket.on("initiate_memory_game", (data) => {
     io.to(data.roomId).emit("start_memory_game", {
       cards: data.cards,
-      starter: data.starter
+      starter: data.starter,
     });
   });
 
@@ -155,12 +159,18 @@ socket.on("voice_note_reaction", (data) => {
   socket.on("memory_score_update", (data) => {
     socket.to(data.roomId).emit("partner_score_sync", {
       score: data.score,
-      matchedIds: data.matchedIds
+      matchedIds: data.matchedIds,
     });
   });
 
   socket.on("send_chess_move", (data) => {
-    if (!data || !data.roomId || !data.move || !data.move.from || !data.move.to) {
+    if (
+      !data ||
+      !data.roomId ||
+      !data.move ||
+      !data.move.from ||
+      !data.move.to
+    ) {
       return;
     }
     socket.to(data.roomId).emit("receive_chess_move", data.move);
@@ -174,7 +184,7 @@ socket.on("voice_note_reaction", (data) => {
   socket.on("send_call_signal", (data) => {
     io.to(data.to).emit("incoming_call_signal", {
       from: data.from,
-      type: data.type
+      type: data.type,
     });
   });
 
@@ -192,7 +202,7 @@ socket.on("voice_note_reaction", (data) => {
 
   socket.on("send_nudge", (data) => {
     socket.to(data.roomId).emit("receive_nudge", {
-      senderName: data.senderName
+      senderName: data.senderName,
     });
   });
 
@@ -200,40 +210,42 @@ socket.on("voice_note_reaction", (data) => {
     socket.to(data.roomId).emit("location_updated", data);
   });
 
-  socket.on('disconnect', () => {
-    console.log('User Disconnected', socket.id);
+  socket.on("disconnect", () => {
+    console.log("User Disconnected", socket.id);
+  });
+  socket.on("avatar_updated", (data) => {
+    socket.to(data.roomId).emit("partner_avatar_updated");
   });
 
   socket.on("mood_updated", (data) => {
-  socket.to(data.roomId).emit("partner_mood_updated");
-  socket.to(data.partnerId).emit("partner_mood_updated");
+    socket.to(data.roomId).emit("partner_mood_updated");
+    socket.to(data.partnerId).emit("partner_mood_updated");
   });
-  
+
   socket.on("anniversary_updated", (data) => {
-  socket.to(data.roomId).emit("partner_mood_updated");
-  socket.to(data.partnerId).emit("partner_mood_updated");
-});
-socket.on("register_peer", (data) => {
-  // Store peer ID for this user
-  socket.peerId = data.peerId;
-  socket.userId = data.userId;
-});
+    socket.to(data.roomId).emit("partner_mood_updated");
+    socket.to(data.partnerId).emit("partner_mood_updated");
+  });
+  socket.on("register_peer", (data) => {
+    // Store peer ID for this user
+    socket.peerId = data.peerId;
+    socket.userId = data.userId;
+  });
 
-socket.on("get_peer_id", (data) => {
-  // Find partner's socket and get their peer ID
-  const partnerSocket = [...io.sockets.sockets.values()]
-    .find(s => s.userId === data.partnerId);
-  
-  if (partnerSocket) {
-    socket.emit("partner_peer_id", { peerId: partnerSocket.peerId });
-  } else {
-    socket.emit("partner_peer_id", { peerId: null });
-  }
-});
+  socket.on("get_peer_id", (data) => {
+    // Find partner's socket and get their peer ID
+    const partnerSocket = [...io.sockets.sockets.values()].find(
+      (s) => s.userId === data.partnerId,
+    );
 
-
+    if (partnerSocket) {
+      socket.emit("partner_peer_id", { peerId: partnerSocket.peerId });
+    } else {
+      socket.emit("partner_peer_id", { peerId: null });
+    }
+  });
 });
-const { ExpressPeerServer } = require('peer');
+const { ExpressPeerServer } = require("peer");
 
 const PORT = process.env.PORT || 8000;
 
@@ -242,11 +254,11 @@ server.listen(PORT, () => {
 
   const peerServer = ExpressPeerServer(server, {
     debug: true,
-    path: '/peerjs',
+    path: "/peerjs",
     allow_discovery: true,
   });
 
-  app.use('/peerjs', peerServer);
+  app.use("/peerjs", peerServer);
 });
 
 module.exports = { io };
