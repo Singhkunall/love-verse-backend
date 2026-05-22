@@ -247,9 +247,9 @@ io.on("connection", (socket) => {
       socket.emit("partner_peer_id", { peerId: null });
     }
   });
-});
 
-socket.on("change_video", (data) => {
+  // 👇 YOUTUBE EVENTS KO ANDAR (UPAR) MOVE KAR DIYA 👇
+  socket.on("change_video", (data) => {
     socket.to(data.roomId).emit("video_changed", data);
   });
 
@@ -264,8 +264,12 @@ socket.on("change_video", (data) => {
   socket.on("seek_video", (data) => {
     socket.to(data.roomId).emit("video_seeked", data);
   });
+
+}); // <-- YAHAN PAR io.on('connection') BLOCK BAND HOGA
+
 const PORT = process.env.PORT || 8000;
 server.listen(PORT, () => {
   console.log(`🚀 Server started on port ${PORT}`);
 });
+
 module.exports = { io };
