@@ -245,20 +245,8 @@ io.on("connection", (socket) => {
     }
   });
 });
-const { ExpressPeerServer } = require("peer");
-
 const PORT = process.env.PORT || 8000;
-
 server.listen(PORT, () => {
   console.log(`🚀 Server started on port ${PORT}`);
-
-  const peerServer = ExpressPeerServer(server, {
-    debug: true,
-    path: "/peerjs",
-    allow_discovery: true,
-  });
-
-  app.use("/peerjs", peerServer);
 });
-
 module.exports = { io };
