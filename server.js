@@ -248,6 +248,22 @@ io.on("connection", (socket) => {
     }
   });
 });
+
+socket.on("change_video", (data) => {
+    socket.to(data.roomId).emit("video_changed", data);
+  });
+
+  socket.on("play_video", (data) => {
+    socket.to(data.roomId).emit("video_played", data);
+  });
+
+  socket.on("pause_video", (data) => {
+    socket.to(data.roomId).emit("video_paused");
+  });
+
+  socket.on("seek_video", (data) => {
+    socket.to(data.roomId).emit("video_seeked", data);
+  });
 const PORT = process.env.PORT || 8000;
 server.listen(PORT, () => {
   console.log(`🚀 Server started on port ${PORT}`);
