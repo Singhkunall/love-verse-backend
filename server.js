@@ -55,8 +55,8 @@ app.use("/api/voice-notes", voiceNoteRoutes);
 const routineRoutes = require("./routes/routineRoutes");
 app.use("/api/routine", routineRoutes);
 
-const agoraRoutes = require('./routes/agoraRoutes');
-app.use('/api/agora', agoraRoutes);
+const agoraRoutes = require("./routes/agoraRoutes");
+app.use("/api/agora", agoraRoutes);
 
 app.use("/api/events", eventRoutes);
 app.get("/api/chat/history/:roomId", async (req, res) => {
@@ -229,6 +229,35 @@ io.on("connection", (socket) => {
     socket.to(data.roomId).emit("partner_mood_updated");
     socket.to(data.partnerId).emit("partner_mood_updated");
   });
+
+  // LUDO EVENTS
+  socket.on("ludo_roll", (data) => {
+    socket
+      .to(data.roomId)
+      .emit("ludo_rolled", {
+        color: data.color,
+        value: data.value,
+        movable: data.movable,
+      });
+  });
+
+  socket.on("ludo_move", (data) => {
+    socket
+      .to(data.roomId)
+      .emit("ludo_moved", { tokens: data.tokens, turn: data.turn });
+  });
+
+  socket.on("ludo_winner", (data) => {
+    socket.to(data.roomId).emit("ludo_winner", { color: data.color });
+  });
+
+  socket.on("ludo_reset", (data) => {
+    io.to(data.roomId).emit("ludo_reset");
+  });
+
+  socket.on("join_ludo", (data) => {
+    socket.join(data.roomId);
+  });
   socket.on("register_peer", (data) => {
     // Store peer ID for this user
     socket.peerId = data.peerId;
@@ -264,7 +293,6 @@ io.on("connection", (socket) => {
   socket.on("seek_video", (data) => {
     socket.to(data.roomId).emit("video_seeked", data);
   });
-
 }); // <-- YAHAN PAR io.on('connection') BLOCK BAND HOGA
 
 const PORT = process.env.PORT || 8000;
