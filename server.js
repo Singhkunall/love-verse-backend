@@ -58,6 +58,9 @@ app.use("/api/routine", routineRoutes);
 const agoraRoutes = require("./routes/agoraRoutes");
 app.use("/api/agora", agoraRoutes);
 
+const universeRoute = require("./routes/universe");
+app.use("/api/universe", universeRoute);
+
 app.use("/api/events", eventRoutes);
 app.get("/api/chat/history/:roomId", async (req, res) => {
   try {
@@ -159,6 +162,10 @@ io.on("connection", (socket) => {
     socket.to(data.roomId).emit("turn_change");
   });
 
+  socket.on("universe_pin_added", (data) => {
+    socket.to(data.roomId).emit("universe_pin_added");
+  });
+
   socket.on("memory_score_update", (data) => {
     socket.to(data.roomId).emit("partner_score_sync", {
       score: data.score,
@@ -232,13 +239,11 @@ io.on("connection", (socket) => {
 
   // LUDO EVENTS
   socket.on("ludo_roll", (data) => {
-    socket
-      .to(data.roomId)
-      .emit("ludo_rolled", {
-        color: data.color,
-        value: data.value,
-        movable: data.movable,
-      });
+    socket.to(data.roomId).emit("ludo_rolled", {
+      color: data.color,
+      value: data.value,
+      movable: data.movable,
+    });
   });
 
   socket.on("ludo_move", (data) => {
