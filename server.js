@@ -297,7 +297,16 @@ io.on("connection", (socket) => {
 
   socket.on("seek_video", (data) => {
     socket.to(data.roomId).emit("video_seeked", data);
+
   });
+
+  socket.on('order_placed', (data) => {
+  socket.to(data.roomId).emit('order_placed', { 
+    placedBy: data.placedBy,
+    platform: data.platform,
+    items: data.items
+  });
+});
 }); // <-- YAHAN PAR io.on('connection') BLOCK BAND HOGA
 
 const PORT = process.env.PORT || 8000;
