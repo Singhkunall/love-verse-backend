@@ -301,12 +301,41 @@ io.on("connection", (socket) => {
   });
 
   socket.on('order_placed', (data) => {
-  socket.to(data.roomId).emit('order_placed', { 
-    placedBy: data.placedBy,
-    platform: data.platform,
-    items: data.items
+    socket.to(data.roomId).emit('order_placed', { 
+      placedBy: data.placedBy,
+      platform: data.platform,
+      items: data.items
+    });
   });
-});
+
+  // --- COUPLE QUIZ EVENTS ---
+  socket.on("send_quiz_answer", (data) => {
+    socket.to(data.roomId).emit("partner_quiz_answer", {
+      userId: data.userId,
+      optionIndex: data.optionIndex
+    });
+  });
+
+  socket.on("sync_quiz_round", (data) => {
+    socket.to(data.roomId).emit("quiz_round_sync", {
+      myScore: data.partnerScore,
+      partnerScore: data.myScore
+    });
+  });
+
+  socket.on("trigger_next_quiz_round", (data) => {
+    socket.to(data.roomId).emit("quiz_next_round_trigger", {
+      nextRound: data.nextRound
+    });
+  });
+
+  socket.on("quiz_game_over", (data) => {
+    socket.to(data.roomId).emit("quiz_game_over_sync");
+  });
+
+  socket.on("trigger_quiz_reset", (data) => {
+    socket.to(data.roomId).emit("quiz_reset_trigger");
+  });
 }); // <-- YAHAN PAR io.on('connection') BLOCK BAND HOGA
 
 const PORT = process.env.PORT || 8000;
