@@ -8,6 +8,7 @@ const universePinSchema = new mongoose.Schema({
   lat: { type: Number, required: true },
   lng: { type: Number, required: true },
   country: { type: String, default: 'Unknown' },
+  imageUrl: { type: String, default: '' },
   addedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
 }, { timestamps: true });
 
