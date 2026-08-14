@@ -359,9 +359,13 @@ io.on("connection", (socket) => {
   socket.on("touch_move", (data) => {
     socket.to(data.roomId).emit("partner_touch_move", {
       userId: data.userId,
-      x: data.x,
-      y: data.y
+      nx: data.nx,
+      ny: data.ny
     });
+  });
+
+  socket.on("touch_end", (data) => {
+    socket.to(data.roomId).emit("partner_touch_end");
   });
 }); // <-- YAHAN PAR io.on('connection') BLOCK BAND HOGA
 
