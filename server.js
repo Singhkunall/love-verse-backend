@@ -336,6 +336,33 @@ io.on("connection", (socket) => {
   socket.on("trigger_quiz_reset", (data) => {
     socket.to(data.roomId).emit("quiz_reset_trigger");
   });
+
+  // --- COUPLE BEATS MUSIC EVENTS ---
+  socket.on("beats_play", (data) => {
+    socket.to(data.roomId).emit("beats_play_sync", {
+      trackIdx: data.trackIdx,
+      currentTime: data.currentTime
+    });
+  });
+
+  socket.on("beats_pause", (data) => {
+    socket.to(data.roomId).emit("beats_pause_sync");
+  });
+
+  socket.on("beats_change_track", (data) => {
+    socket.to(data.roomId).emit("beats_track_sync", {
+      trackIdx: data.trackIdx
+    });
+  });
+
+  // --- VIRTUAL TOUCH EVENTS ---
+  socket.on("touch_move", (data) => {
+    socket.to(data.roomId).emit("partner_touch_move", {
+      userId: data.userId,
+      x: data.x,
+      y: data.y
+    });
+  });
 }); // <-- YAHAN PAR io.on('connection') BLOCK BAND HOGA
 
 const PORT = process.env.PORT || 8000;

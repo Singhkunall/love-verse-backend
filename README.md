@@ -128,6 +128,8 @@ backend/
 - `ludo_roll` / `ludo_move` / `ludo_winner` - Synchronized Ludo game
 - `send_chess_move` / `receive_chess_move` - Real-time chess sync
 - `send_quiz_answer` / `partner_quiz_answer` / `sync_quiz_round` - Real-time Couple Quiz 1v1 battle
+- `beats_play` / `beats_pause` / `beats_change_track` - Synchronized Music & Lo-Fi player
+- `touch_move` / `partner_touch_move` - Real-time Virtual Touch canvas & connection spark detection
 - `initiate_memory_game` / `card_flip` - Memory card matching game
 - `change_video` / `play_video` / `pause_video` / `seek_video` - YouTube Watch Together sync
 - `update_location` / `location_updated` - Real-time location sharing
