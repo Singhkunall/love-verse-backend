@@ -62,6 +62,29 @@ const universeRoute = require("./routes/universe");
 app.use("/api/universe", universeRoute);
 
 app.use("/api/events", eventRoutes);
+
+// --- WATCH TOGETHER STREAM PROXY ROUTE (BYPASSES X-FRAME-OPTIONS) ---
+app.get("/api/stream-proxy", async (req, res) => {
+  try {
+    const targetUrl = req.query.url || "https://net77.cc/home";
+    const axios = require("axios");
+    const response = await axios.get(targetUrl, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+      }
+    });
+
+    res.removeHeader("X-Frame-Options");
+    res.removeHeader("Content-Security-Policy");
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    res.send(response.data);
+  } catch (err) {
+    console.error("Stream Proxy Error:", err.message);
+    res.status(500).send("Proxy error loading stream.");
+  }
+});
+
 app.get("/api/chat/history/:roomId", async (req, res) => {
   try {
     const messages = await Message.find({ room: req.params.roomId }).sort({
