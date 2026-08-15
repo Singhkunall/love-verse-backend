@@ -70,4 +70,20 @@ router.post('/update-avatar', async (req, res) => {
   }
 });
 
+router.post('/upload-media', async (req, res) => {
+  try {
+    const { media, resourceType } = req.body;
+    const cloudinary = require('cloudinary').v2;
+    const type = resourceType === 'video' ? 'video' : 'auto';
+    const upload = await cloudinary.uploader.upload(media, {
+      folder: 'love_verse_chat',
+      resource_type: type
+    });
+    res.json({ success: true, url: upload.secure_url });
+  } catch (err) {
+    console.error("Cloudinary Upload Error:", err.message);
+    res.status(500).json({ message: err.message });
+  }
+});
+
 module.exports = router;
