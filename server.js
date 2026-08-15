@@ -376,6 +376,10 @@ io.on("connection", (socket) => {
     socket.to(data.roomId).emit("cinema_stream_ended", data);
   });
 
+  socket.on("send_cinema_reaction", (data) => {
+    socket.to(data.roomId).emit("receive_cinema_reaction", data);
+  });
+
   socket.on('order_placed', (data) => {
     socket.to(data.roomId).emit('order_placed', { 
       placedBy: data.placedBy,
