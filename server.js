@@ -65,23 +65,69 @@ app.use("/api/events", eventRoutes);
 
 // --- WATCH TOGETHER STREAM PROXY ROUTE (BYPASSES X-FRAME-OPTIONS) ---
 app.get("/api/stream-proxy", async (req, res) => {
+  const targetUrl = req.query.url || "https://net77.cc/home";
   try {
-    const targetUrl = req.query.url || "https://net77.cc/home";
     const axios = require("axios");
     const response = await axios.get(targetUrl, {
       headers: {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
-      }
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Referer": "https://net77.cc/"
+      },
+      maxRedirects: 5,
+      validateStatus: () => true
     });
 
     res.removeHeader("X-Frame-Options");
     res.removeHeader("Content-Security-Policy");
     res.setHeader("Content-Type", "text/html; charset=utf-8");
-    res.send(response.data);
+
+    if (response.status === 200 && typeof response.data === "string" && response.data.length > 100) {
+      res.send(response.data);
+    } else {
+      res.send(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            body { margin: 0; background: #09051d; color: white; font-family: system-ui, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; text-align: center; padding: 24px; box-sizing: border-box; }
+            .card { background: rgba(255,255,255,0.05); padding: 32px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); max-width: 450px; }
+            .btn { background: #f43f5e; color: white; padding: 14px 28px; text-decoration: none; border-radius: 16px; font-weight: bold; margin-top: 16px; display: inline-block; box-shadow: 0 10px 20px rgba(244,63,94,0.3); }
+          </style>
+        </head>
+        <body>
+          <div class="card">
+            <h2>🍿 NetMirror Streaming Portal</h2>
+            <p>NetMirror requires direct browser verification. Click below to launch NetMirror or use Love-Verse Screen Share during call!</p>
+            <a href="${targetUrl}" target="_blank" class="btn">Launch NetMirror Streamer 🍿</a>
+          </div>
+        </body>
+        </html>
+      `);
+    }
   } catch (err) {
-    console.error("Stream Proxy Error:", err.message);
-    res.status(500).send("Proxy error loading stream.");
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <style>
+          body { margin: 0; background: #09051d; color: white; font-family: system-ui, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; text-align: center; padding: 24px; box-sizing: border-box; }
+          .card { background: rgba(255,255,255,0.05); padding: 32px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); max-width: 450px; }
+          .btn { background: #f43f5e; color: white; padding: 14px 28px; text-decoration: none; border-radius: 16px; font-weight: bold; margin-top: 16px; display: inline-block; box-shadow: 0 10px 20px rgba(244,63,94,0.3); }
+        </style>
+      </head>
+      <body>
+        <div class="card">
+          <h2>🍿 NetMirror Streaming Portal</h2>
+          <p>NetMirror requires direct browser verification. Click below to launch NetMirror or use Love-Verse Screen Share during call!</p>
+          <a href="${targetUrl}" target="_blank" class="btn">Launch NetMirror Streamer 🍿</a>
+        </div>
+      </body>
+      </html>
+    `);
   }
 });
 
