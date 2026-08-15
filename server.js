@@ -366,7 +366,14 @@ io.on("connection", (socket) => {
 
   socket.on("seek_video", (data) => {
     socket.to(data.roomId).emit("video_seeked", data);
+  });
 
+  socket.on("start_cinema_stream", (data) => {
+    socket.to(data.roomId).emit("cinema_stream_started", data);
+  });
+
+  socket.on("end_cinema_stream", (data) => {
+    socket.to(data.roomId).emit("cinema_stream_ended", data);
   });
 
   socket.on('order_placed', (data) => {
