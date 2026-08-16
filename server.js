@@ -372,6 +372,10 @@ io.on("connection", (socket) => {
     socket.to(data.roomId).emit("cinema_stream_started", data);
   });
 
+  socket.on("request_cinema_stream", (data) => {
+    socket.to(data.roomId).emit("cinema_stream_requested", data);
+  });
+
   socket.on("end_cinema_stream", (data) => {
     socket.to(data.roomId).emit("cinema_stream_ended", data);
   });
