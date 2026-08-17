@@ -16,13 +16,28 @@ const app = express();
 
 const allowedOrigins = [
   "http://localhost:5173",
+  "http://localhost:8000",
+  "http://localhost",
+  "https://localhost",
+  "capacitor://localhost",
   "https://love-verse-frontend.vercel.app",
   /\.vercel\.app$/,
 ];
 
 app.use(
   cors({
-    origin: allowedOrigins,
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps, curl, postman)
+      if (!origin) return callback(null, true);
+      const isAllowed = allowedOrigins.some((allowed) => {
+        if (allowed instanceof RegExp) return allowed.test(origin);
+        return allowed === origin;
+      });
+      if (isAllowed || origin.includes("localhost") || origin.startsWith("capacitor://")) {
+        return callback(null, true);
+      }
+      return callback(null, true); // Allow mobile app access
+    },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   }),
