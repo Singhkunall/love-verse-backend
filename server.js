@@ -276,14 +276,27 @@ io.on("connection", (socket) => {
   });
 
   socket.on("send_call_signal", (data) => {
+    if (!data || !data.to) return;
     io.to(data.to).emit("incoming_call_signal", {
       from: data.from,
       type: data.type,
+      roomId: data.roomId
     });
   });
 
+  socket.on("accept_call_signal", (data) => {
+    if (!data || !data.to) return;
+    io.to(data.to).emit("call_accepted_signal", { from: data.from });
+  });
+
+  socket.on("decline_call_signal", (data) => {
+    if (!data || !data.to) return;
+    io.to(data.to).emit("call_declined_signal", { from: data.from, reason: data.reason });
+  });
+
   socket.on("end_call_signal", (data) => {
-    io.to(data.to).emit("call_ended_signal");
+    if (!data || !data.to) return;
+    io.to(data.to).emit("call_ended_signal", { from: data.from });
   });
 
   socket.on("typing", (data) => {
