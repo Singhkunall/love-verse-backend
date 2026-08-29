@@ -78,6 +78,9 @@ app.use("/api/universe", universeRoute);
 
 app.use("/api/events", eventRoutes);
 
+const doodleRoutes = require("./routes/doodleRoutes");
+app.use("/api/doodle", doodleRoutes);
+
 // --- WATCH TOGETHER STREAM PROXY ROUTE (BYPASSES X-FRAME-OPTIONS) ---
 app.get("/api/stream-proxy", async (req, res) => {
   const targetUrl = req.query.url || "https://net77.cc/home";
@@ -493,6 +496,37 @@ io.on("connection", (socket) => {
 
   socket.on("touch_end", (data) => {
     socket.to(data.roomId).emit("partner_touch_end");
+  });
+
+  // --- LOVE DOODLE BOARD SOCKET EVENTS ---
+  socket.on("draw_stroke", (data) => {
+    if (!data || !data.roomId) return;
+    socket.to(data.roomId).emit("draw_stroke", data);
+  });
+
+  socket.on("cursor_move", (data) => {
+    if (!data || !data.roomId) return;
+    socket.to(data.roomId).emit("cursor_move", data);
+  });
+
+  socket.on("canvas_clear", (data) => {
+    if (!data || !data.roomId) return;
+    io.to(data.roomId).emit("canvas_clear");
+  });
+
+  socket.on("doodle_saved", (data) => {
+    if (!data || !data.roomId) return;
+    io.to(data.roomId).emit("doodle_saved", data);
+  });
+
+  socket.on("stroke_undo", (data) => {
+    if (!data || !data.roomId) return;
+    socket.to(data.roomId).emit("stroke_undo");
+  });
+
+  socket.on("stamp_place", (data) => {
+    if (!data || !data.roomId) return;
+    socket.to(data.roomId).emit("stamp_place", data);
   });
 }); // <-- YAHAN PAR io.on('connection') BLOCK BAND HOGA
 
