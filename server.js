@@ -299,6 +299,21 @@ io.on("connection", (socket) => {
     io.to(data.to).emit("call_ended_signal", { from: data.from });
   });
 
+  socket.on("send_anniversary_toast", (data) => {
+    if (!data || !data.roomId) return;
+    io.to(data.roomId).emit("receive_anniversary_toast", {
+      senderName: data.senderName
+    });
+  });
+
+  socket.on("send_anniversary_letter", (data) => {
+    if (!data || !data.roomId) return;
+    io.to(data.roomId).emit("receive_anniversary_letter", {
+      senderName: data.senderName,
+      letter: data.letter
+    });
+  });
+
   socket.on("typing", (data) => {
     socket.to(data.room).emit("display_typing", data);
   });
