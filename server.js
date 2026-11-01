@@ -160,6 +160,15 @@ app.get("/api/chat/history/:roomId", async (req, res) => {
   }
 });
 
+// Active presence tracker (userId -> Set of socket.id)
+const activeUsers = new Map();
+
+app.get("/api/auth/presence/:userId", (req, res) => {
+  const targetStr = String(req.params.userId);
+  const isOnline = activeUsers.has(targetStr) && activeUsers.get(targetStr).size > 0;
+  res.json({ userId: targetStr, isOnline });
+});
+
 app.get("/", (req, res) => {
   res.send("Love-Verse Server is Flying on Render! ❤️");
 });
@@ -168,8 +177,32 @@ io.on("connection", (socket) => {
   console.log("A user connected:", socket.id);
 
   socket.on("setup", (userId) => {
-    socket.join(userId);
-    console.log("User joined personal room:", userId);
+    if (!userId) return;
+    const uId = String(userId);
+    socket.userId = uId;
+    socket.join(uId);
+
+    if (!activeUsers.has(uId)) {
+      activeUsers.set(uId, new Set());
+    }
+    activeUsers.get(uId).add(socket.id);
+
+    // Broadcast online presence in real-time
+    io.emit("user_presence_change", {
+      userId: uId,
+      isOnline: true
+    });
+    console.log(`User ${uId} is online (${activeUsers.get(uId).size} active sessions)`);
+  });
+
+  socket.on("check_presence", (targetUserId) => {
+    if (!targetUserId) return;
+    const targetStr = String(targetUserId);
+    const isOnline = activeUsers.has(targetStr) && activeUsers.get(targetStr).size > 0;
+    socket.emit("presence_response", {
+      userId: targetStr,
+      isOnline
+    });
   });
 
   socket.on("join_chat", (roomId) => {
@@ -528,7 +561,25 @@ io.on("connection", (socket) => {
     if (!data || !data.roomId) return;
     socket.to(data.roomId).emit("stamp_place", data);
   });
-}); // <-- YAHAN PAR io.on('connection') BLOCK BAND HOGA
+
+  socket.on("disconnect", () => {
+    console.log("A user disconnected:", socket.id);
+    if (socket.userId && activeUsers.has(socket.userId)) {
+      const userSockets = activeUsers.get(socket.userId);
+      userSockets.delete(socket.id);
+      if (userSockets.size === 0) {
+        activeUsers.delete(socket.userId);
+        io.emit("user_presence_change", {
+          userId: socket.userId,
+          isOnline: false,
+          lastSeen: new Date()
+        });
+        console.log(`User ${socket.userId} went offline`);
+        
+      }
+    }
+  });
+}); 
 
 const PORT = process.env.PORT || 8000;
 server.listen(PORT, () => {
