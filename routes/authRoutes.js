@@ -7,6 +7,7 @@ const {
   googleLogin,
   googleCallback,
   connectPartner, 
+  unlinkPartner,
   updateAnniversary, 
   updateMood, 
   getUserProfile,
@@ -22,6 +23,7 @@ router.get('/google-callback', googleCallback);
 
 // --- 2. Profile & Connection ---
 router.post('/connect', connectPartner);
+router.post('/unlink', unlinkPartner);
 router.post('/update-anniversary', updateAnniversary);
 router.post('/update-mood', updateMood);
 router.get('/profile/:id', getUserProfile);

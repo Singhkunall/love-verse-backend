@@ -200,3 +200,37 @@ exports.getChatHistory = async (req, res) => {
     res.status(500).json({ error: "Chat load nahi ho payi" }); 
   }
 };
+
+// --- 10. UNLINK PARTNER (SAFE DISCONNECT) ---
+exports.unlinkPartner = async (req, res) => {
+  const { userId } = req.body;
+  try {
+    const { io } = require('../server');
+    const me = await User.findById(userId);
+    if (!me) return res.status(404).json({ message: "User not found" });
+
+    const partnerId = me.partnerId;
+
+    await User.findByIdAndUpdate(userId, { 
+      $unset: { partnerId: 1, partnerEmail: 1 } 
+    });
+
+    if (partnerId) {
+      await User.findByIdAndUpdate(partnerId, { 
+        $unset: { partnerId: 1, partnerEmail: 1 } 
+      });
+      if (io) {
+        io.to(partnerId.toString()).emit("partner_disconnected");
+      }
+    }
+
+    if (io) {
+      io.to(userId.toString()).emit("partner_disconnected");
+    }
+
+    res.status(200).json({ message: "Partner successfully disconnected." });
+  } catch (error) {
+    console.error("Unlink partner error:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
