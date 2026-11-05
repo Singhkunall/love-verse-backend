@@ -217,12 +217,28 @@ io.on("connection", (socket) => {
 
   socket.on("send_message", async (data) => {
     try {
+      if (!data) return;
       if (typeof data.message === "string" && data.message.startsWith("http")) {
         data.isImage = true;
       }
       const newMessage = new Message(data);
       await newMessage.save();
-      socket.to(data.room).emit("receive_message", data);
+
+      // Determine recipient ID from receiverId, to, or room (format id1_id2)
+      let recipientId = data.receiverId || data.to;
+      if (!recipientId && data.room && typeof data.room === 'string' && data.room.includes('_')) {
+        const parts = data.room.split('_');
+        recipientId = parts.find(id => id && String(id) !== String(data.sender));
+      }
+
+      // Broadcast to room AND recipient user room in a single chained call (Socket.io deduplicates automatically)
+      if (recipientId && data.room) {
+        socket.to(data.room).to(String(recipientId)).emit("receive_message", data);
+      } else if (data.room) {
+        socket.to(data.room).emit("receive_message", data);
+      } else if (recipientId) {
+        io.to(String(recipientId)).emit("receive_message", data);
+      }
     } catch (err) {
       console.log("DB Error:", err);
     }
@@ -259,9 +275,23 @@ io.on("connection", (socket) => {
     socket.to(data.roomId).emit("partner_reaction_score", data);
   });
 
-  socket.on("new_voice_note", (data) => {
-    socket.to(data.roomId).emit("receive_voice_note", data);
-  });
+  const handleVoiceNoteBroadcast = (data) => {
+    if (!data) return;
+    const room = data.roomId || data.room;
+    let recipientId = data.receiverId || data.to;
+    if (!recipientId && room && typeof room === 'string' && room.includes('_')) {
+      const parts = room.split('_');
+      recipientId = parts.find(id => id && String(id) !== String(data.sender));
+    }
+    if (recipientId && room) {
+      socket.to(room).to(String(recipientId)).emit("receive_voice_note", data);
+    } else if (room) {
+      socket.to(room).emit("receive_voice_note", data);
+    }
+  };
+
+  socket.on("new_voice_note", handleVoiceNoteBroadcast);
+  socket.on("send_voice_note", handleVoiceNoteBroadcast);
 
   socket.on("voice_note_reaction", (data) => {
     socket.to(data.roomId).emit("voice_reaction_update", data);
