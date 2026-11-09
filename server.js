@@ -8,6 +8,7 @@ const authRoutes = require("./routes/authRoutes");
 // --- FIX: '../' ko hata kar './' kiya kyunki server.js aur models same level par hain ---
 const Message = require("./models/Message");
 const eventRoutes = require("./routes/event.routes");
+const { sendPushNotification } = require("./services/pushService");
 
 dotenv.config();
 connectDB();
@@ -239,6 +240,31 @@ io.on("connection", (socket) => {
       } else if (recipientId) {
         io.to(String(recipientId)).emit("receive_message", data);
       }
+
+      // Dispatch FCM Push Notification (delivers to phone even if app is completely closed/killed)
+      if (recipientId) {
+        const senderName = data.senderName || "Partner";
+        const bodyText = data.isImage
+          ? "Sent a photo 📸"
+          : data.isVideo
+          ? "Sent a video 🎬"
+          : data.isVoiceNote
+          ? "Sent a voice note 🎙️"
+          : (data.message || "New message");
+
+        sendPushNotification({
+          toUserId: recipientId,
+          title: `${senderName} ❤️`,
+          body: bodyText,
+          data: {
+            type: "chat",
+            senderId: data.sender || "",
+            senderName: senderName,
+            roomId: data.room || "",
+            message: data.message || ""
+          }
+        }).catch(err => console.error("Push dispatch error:", err.message));
+      }
     } catch (err) {
       console.log("DB Error:", err);
     }
@@ -348,6 +374,20 @@ io.on("connection", (socket) => {
       type: data.type,
       roomId: data.roomId
     });
+
+    // Send FCM push notification for incoming call (rings even when app is killed)
+    sendPushNotification({
+      toUserId: data.to,
+      title: `Incoming ${data.type === "video" ? "Video" : "Audio"} Call 📞`,
+      body: `${data.senderName || "Partner"} is calling you! Tap to answer.`,
+      data: {
+        type: "call",
+        callType: data.type || "video",
+        roomId: data.roomId || "",
+        from: data.from || "",
+        senderName: data.senderName || "Partner"
+      }
+    }).catch(err => console.error("Call push dispatch error:", err.message));
   });
 
   socket.on("accept_call_signal", (data) => {

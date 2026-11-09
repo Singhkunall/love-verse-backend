@@ -234,3 +234,23 @@ exports.unlinkPartner = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// --- 11. SAVE PUSH TOKEN (FCM) ---
+exports.savePushToken = async (req, res) => {
+  const { userId, token } = req.body;
+  if (!userId || !token) {
+    return res.status(400).json({ error: "Missing userId or token" });
+  }
+  try {
+    const updated = await User.findByIdAndUpdate(
+      userId,
+      { fcmToken: token },
+      { new: true }
+    );
+    if (!updated) return res.status(404).json({ error: "User not found" });
+    res.status(200).json({ success: true, message: "Push token registered successfully" });
+  } catch (error) {
+    console.error("Save push token error:", error);
+    res.status(500).json({ error: "Could not save push token" });
+  }
+};

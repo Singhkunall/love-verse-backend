@@ -13,7 +13,8 @@ const userSchema = new mongoose.Schema({
     default: null
   },
   partnerEmail: { type: String, default: null },
-  mood: { type: String, default: 'Happy ❤️' }
+  mood: { type: String, default: 'Happy ❤️' },
+  fcmToken: { type: String, default: null }
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);
