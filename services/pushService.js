@@ -36,23 +36,45 @@ async function sendPushNotification({ toUserId, title, body, data = {} }) {
       stringifiedData[safeKey] = value !== undefined && value !== null ? String(value) : "";
     }
 
-    const message = {
-      token: user.fcmToken,
-      notification: {
-        title: title || "Love-Verse",
-        body: body || "You have a new update!"
-      },
-      data: stringifiedData,
-      android: {
-        priority: "high",
-        notification: {
-          channelId: "love_verse_channel",
-          sound: "default",
-          icon: "ic_launcher",
-          color: "#F43F5E"
+    const isCall = stringifiedData.type === "call";
+
+    let message;
+    if (isCall) {
+      // DATA-ONLY high-priority message for incoming calls:
+      // When a message has NO `notification` payload, Google Play Services is forced
+      // to wake up LoveVerseMessagingService.onMessageReceived() in the background,
+      // which acquires the wake lock and launches the full-screen IncomingCallActivity!
+      message = {
+        token: user.fcmToken,
+        data: {
+          ...stringifiedData,
+          title: title || "Incoming Call",
+          body: body || "Partner is calling you!"
+        },
+        android: {
+          priority: "high"
         }
-      }
-    };
+      };
+    } else {
+      // Standard notification message for regular chats
+      message = {
+        token: user.fcmToken,
+        notification: {
+          title: title || "Love-Verse",
+          body: body || "You have a new update!"
+        },
+        data: stringifiedData,
+        android: {
+          priority: "high",
+          notification: {
+            channelId: "love_verse_channel",
+            sound: "default",
+            icon: "ic_launcher",
+            color: "#F43F5E"
+          }
+        }
+      };
+    }
 
     const messaging = getMessaging();
     const response = await messaging.send(message);
