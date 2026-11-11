@@ -368,41 +368,57 @@ io.on("connection", (socket) => {
   });
 
   socket.on("send_call_signal", (data) => {
-    if (!data || !data.to) return;
-    io.to(data.to).emit("incoming_call_signal", {
-      from: data.from,
+    if (!data) return;
+    let recipientId = data.to || data.receiverId;
+    if (!recipientId && data.roomId && typeof data.roomId === 'string' && data.roomId.includes('_')) {
+      const parts = data.roomId.split('_');
+      recipientId = parts.find(id => id && String(id) !== String(data.from || data.callerId));
+    }
+    if (!recipientId) {
+      console.warn("send_call_signal: Missing recipientId, data was:", data);
+      return;
+    }
+
+    io.to(String(recipientId)).emit("incoming_call_signal", {
+      from: data.from || data.callerId,
+      callerId: data.from || data.callerId,
       type: data.type,
-      roomId: data.roomId
+      roomId: data.roomId,
+      senderName: data.senderName
     });
 
     // Send FCM push notification for incoming call (rings even when app is killed)
+    const senderName = data.senderName || "Partner";
     sendPushNotification({
-      toUserId: data.to,
+      toUserId: String(recipientId),
       title: `Incoming ${data.type === "video" ? "Video" : "Audio"} Call 📞`,
-      body: `${data.senderName || "Partner"} is calling you! Tap to answer.`,
+      body: `${senderName} is calling you! Tap to answer.`,
       data: {
         type: "call",
         callType: data.type || "video",
         roomId: data.roomId || "",
-        from: data.from || "",
-        senderName: data.senderName || "Partner"
+        callerId: data.from || data.callerId || "",
+        senderName: senderName
       }
     }).catch(err => console.error("Call push dispatch error:", err.message));
   });
 
   socket.on("accept_call_signal", (data) => {
-    if (!data || !data.to) return;
-    io.to(data.to).emit("call_accepted_signal", { from: data.from });
+    if (!data) return;
+    const toId = data.to || data.receiverId;
+    if (toId) io.to(String(toId)).emit("call_accepted_signal", { from: data.from });
   });
 
   socket.on("decline_call_signal", (data) => {
-    if (!data || !data.to) return;
-    io.to(data.to).emit("call_declined_signal", { from: data.from, reason: data.reason });
+    if (!data) return;
+    const toId = data.to || data.receiverId;
+    if (toId) io.to(String(toId)).emit("call_declined_signal", { from: data.from, reason: data.reason });
   });
 
   socket.on("end_call_signal", (data) => {
-    if (!data || !data.to) return;
-    io.to(data.to).emit("call_ended_signal", { from: data.from });
+    if (!data) return;
+    const toId = data.to || data.receiverId;
+    if (toId) io.to(String(toId)).emit("call_ended_signal", { from: data.from });
   });
 
   socket.on("send_anniversary_toast", (data) => {

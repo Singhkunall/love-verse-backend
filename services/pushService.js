@@ -26,9 +26,14 @@ async function sendPushNotification({ toUserId, title, body, data = {} }) {
     }
 
     // Convert all values in data to string (FCM requirement: Map<string, string>)
+    // And ensure no FCM reserved keys ('from', 'notification', 'message_type') crash the send
     const stringifiedData = {};
     for (const [key, value] of Object.entries(data)) {
-      stringifiedData[key] = value !== undefined && value !== null ? String(value) : "";
+      let safeKey = key;
+      if (key === "from") safeKey = "callerId";
+      if (key === "notification") safeKey = "notificationData";
+      if (key === "message_type") safeKey = "msgType";
+      stringifiedData[safeKey] = value !== undefined && value !== null ? String(value) : "";
     }
 
     const message = {
