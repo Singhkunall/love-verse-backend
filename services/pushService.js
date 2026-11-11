@@ -1,4 +1,5 @@
 const admin = require("../config/firebase");
+const { getMessaging } = require("firebase-admin/messaging");
 const User = require("../models/User");
 
 /**
@@ -12,13 +13,15 @@ const User = require("../models/User");
 async function sendPushNotification({ toUserId, title, body, data = {} }) {
   if (!toUserId) return;
   try {
-    if (!admin.apps || !admin.apps.length) {
+    const apps = typeof admin.getApps === "function" ? admin.getApps() : (admin.apps || []);
+    if (!apps || !apps.length) {
+      console.warn("PushService: Firebase Admin not initialized, skipping push notification.");
       return;
     }
 
     const user = await User.findById(toUserId);
     if (!user || !user.fcmToken) {
-      // User has not registered a push token yet
+      console.log(`PushService: User ${toUserId} has no fcmToken registered in DB.`);
       return;
     }
 
@@ -46,7 +49,8 @@ async function sendPushNotification({ toUserId, title, body, data = {} }) {
       }
     };
 
-    const response = await admin.messaging().send(message);
+    const messaging = getMessaging();
+    const response = await messaging.send(message);
     console.log(`Push notification sent successfully to ${toUserId}:`, response);
     return response;
   } catch (error) {
