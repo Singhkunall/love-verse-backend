@@ -239,4 +239,18 @@ router.get('/widget/data/:userId', async (req, res) => {
   }
 });
 
+// Update real battery percentage
+router.post('/update-battery', async (req, res) => {
+  try {
+    const { userId, batteryLevel } = req.body;
+    if (!userId || batteryLevel === undefined || batteryLevel === null) {
+      return res.status(400).json({ success: false, message: "userId and batteryLevel required" });
+    }
+    const user = await User.findByIdAndUpdate(userId, { batteryLevel: Number(batteryLevel) }, { new: true });
+    res.json({ success: true, batteryLevel: user.batteryLevel });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 module.exports = router;
