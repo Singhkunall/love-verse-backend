@@ -230,7 +230,7 @@ router.get('/widget/data/:userId', async (req, res) => {
       partnerPhoto: partner?.widgetPhoto || partner?.avatar || null,
       caption: partner?.widgetCaption || "",
       mood: partner?.mood || "Happy ❤️",
-      batteryLevel: partner?.batteryLevel || 75,
+      batteryLevel: partner?.batteryLevel || null,
       daysTogether: daysTogether,
       heartbeatsToday: user.heartbeatsSentToday || 0
     });
@@ -239,7 +239,7 @@ router.get('/widget/data/:userId', async (req, res) => {
   }
 });
 
-// Update real battery percentage
+// Update real battery percentage and sync to partner widget
 router.post('/update-battery', async (req, res) => {
   try {
     const { userId, batteryLevel } = req.body;
@@ -247,6 +247,20 @@ router.post('/update-battery', async (req, res) => {
       return res.status(400).json({ success: false, message: "userId and batteryLevel required" });
     }
     const user = await User.findByIdAndUpdate(userId, { batteryLevel: Number(batteryLevel) }, { new: true });
+
+    // Send push to partner to update their widget with this real battery percentage
+    if (user && user.partnerId) {
+      sendPushNotification({
+        toUserId: String(user.partnerId),
+        title: "Battery Update",
+        body: "",
+        data: {
+          type: "battery_update",
+          batteryLevel: String(user.batteryLevel)
+        }
+      }).catch(err => console.error("Battery push error:", err.message));
+    }
+
     res.json({ success: true, batteryLevel: user.batteryLevel });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
