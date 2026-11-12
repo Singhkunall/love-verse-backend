@@ -90,4 +90,153 @@ router.post('/upload-media', async (req, res) => {
   }
 });
 
+// --- 6. Home Screen Widget APIs ---
+const { sendPushNotification } = require('../services/pushService');
+
+// Upload or update widget photo / selfie
+router.post('/widget/upload-snap', async (req, res) => {
+  try {
+    const { userId, photo, caption } = req.body;
+    if (!userId || !photo) {
+      return res.status(400).json({ success: false, message: "userId and photo are required" });
+    }
+
+    let photoUrl = photo;
+    if (typeof photo === 'string' && photo.startsWith('data:image')) {
+      const cloudinary = require('cloudinary').v2;
+      const upload = await cloudinary.uploader.upload(photo, {
+        folder: 'love_verse_widget',
+        transformation: [{ width: 800, height: 800, crop: "fill", quality: "auto" }]
+      });
+      photoUrl = upload.secure_url;
+    }
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      {
+        widgetPhoto: photoUrl,
+        widgetCaption: caption || "",
+        widgetPhotoTime: new Date()
+      },
+      { new: true }
+    );
+
+    // Calculate days together
+    let daysTogether = 1;
+    if (user.anniversaryDate) {
+      const start = new Date(user.anniversaryDate);
+      const diff = Math.floor((Date.now() - start.getTime()) / (1000 * 60 * 60 * 24));
+      if (!isNaN(diff) && diff >= 0) daysTogether = diff;
+    } else {
+      const start = new Date(user.createdAt || Date.now());
+      daysTogether = Math.max(1, Math.floor((Date.now() - start.getTime()) / (1000 * 60 * 60 * 24)));
+    }
+
+    // Push update to partner's phone & widget
+    if (user.partnerId) {
+      const partner = await User.findById(user.partnerId);
+      if (partner) {
+        sendPushNotification({
+          toUserId: String(partner._id),
+          title: "New Home Screen Photo 📸❤️",
+          body: `${user.name} sent a new photo to your widget!`,
+          data: {
+            type: "widget_update",
+            photoUrl: photoUrl,
+            caption: caption || "",
+            senderName: user.name,
+            daysTogether: String(daysTogether),
+            mood: user.mood || "Happy ❤️"
+          }
+        }).catch(err => console.error("Widget push error:", err.message));
+      }
+    }
+
+    res.json({
+      success: true,
+      photoUrl,
+      caption: caption || "",
+      daysTogether
+    });
+  } catch (err) {
+    console.error("Widget Snap Error:", err.message);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Send 1-tap heartbeat from Home Screen widget
+router.post('/widget/heartbeat', async (req, res) => {
+  try {
+    const { userId } = req.body;
+    if (!userId) {
+      return res.status(400).json({ success: false, message: "userId required" });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+    // Increment today's heartbeat count
+    user.heartbeatsSentToday = (user.heartbeatsSentToday || 0) + 1;
+    await user.save();
+
+    if (user.partnerId) {
+      const partner = await User.findById(user.partnerId);
+      if (partner) {
+        sendPushNotification({
+          toUserId: String(partner._id),
+          title: "Heartbeat Received 💓",
+          body: `${user.name} sent you a love heartbeat!`,
+          data: {
+            type: "heartbeat",
+            senderName: user.name,
+            timestamp: String(Date.now()),
+            totalCount: String(user.heartbeatsSentToday)
+          }
+        }).catch(err => console.error("Heartbeat push error:", err.message));
+      }
+    }
+
+    res.json({
+      success: true,
+      heartbeatsSentToday: user.heartbeatsSentToday,
+      message: "Heartbeat sent to partner! 💓"
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Fetch latest widget data for Android Home Screen
+router.get('/widget/data/:userId', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.userId).populate('partnerId');
+    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+    const partner = user.partnerId;
+    let daysTogether = 1;
+    const anniv = user.anniversaryDate || (partner ? partner.anniversaryDate : null);
+    if (anniv) {
+      const start = new Date(anniv);
+      const diff = Math.floor((Date.now() - start.getTime()) / (1000 * 60 * 60 * 24));
+      if (!isNaN(diff) && diff >= 0) daysTogether = diff;
+    } else {
+      const start = new Date(user.createdAt || Date.now());
+      daysTogether = Math.max(1, Math.floor((Date.now() - start.getTime()) / (1000 * 60 * 60 * 24)));
+    }
+
+    res.json({
+      success: true,
+      partnerName: partner?.name || "Partner ❤️",
+      partnerPhoto: partner?.widgetPhoto || partner?.avatar || null,
+      caption: partner?.widgetCaption || "",
+      mood: partner?.mood || "Happy ❤️",
+      batteryLevel: partner?.batteryLevel || 75,
+      daysTogether: daysTogether,
+      heartbeatsToday: user.heartbeatsSentToday || 0
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 module.exports = router;
